@@ -15,7 +15,16 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+      - name: Install dependencies
+        run: pip install requests
+        
+4. Check dat de inspringing klopt: 6 spaties voor `- name`, 8 spaties voor `run`
 
+**Commit changes** → **Commit changes**
+
+Daarna **Actions** → **Run workflow**. Nu wordt ‘ie groen ✅
+
+Lukt het om die 2 regels precies daar te plakken?
       - name: Draai Nieuwsman script
         run: python generate.py
 
