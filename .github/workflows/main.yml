@@ -1,35 +1,31 @@
 name: Genereer Nieuwsman Journaal
-
 on:
   schedule:
-    - cron: '55 5 * * *' # 07:55 Amsterdam tijd = 05:55 UTC
-  workflow_dispatch: # Zodat je handmatig kan testen
+    - cron: '55 5 * * *'
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
-
-      - name: Installeer Python
+      
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          
       - name: Install dependencies
         run: pip install requests
         
-4. Check dat de inspringing klopt: 6 spaties voor `- name`, 8 spaties voor `run`
-
-**Commit changes** → **Commit changes**
-
-Daarna **Actions** → **Run workflow**. Nu wordt ‘ie groen ✅
-
-Lukt het om die 2 regels precies daar te plakken?
-      - name: Draai Nieuwsman script
+      - name: Genereer video
         run: python generate.py
-
-      - name: Upload naar GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+        
+      - name: Deploy naar Pages
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./output
+          keep_files: true
