@@ -1,36 +1,41 @@
 import os
-import datetime
 import requests
-from pathlib import Path
+import re
+from datetime import datetime
 
-# 1. Mapje maken voor output
-Path("output").mkdir(exist_ok=True)
+print("Nieuwsman Journaal: NOS headline ophalen...")
 
-# 2. Nieuws ophalen van NOS - pak top 3 headlines
-print("Nieuws ophalen...")
-headers = {'User-Agent': 'Mozilla/5.0'}
-r = requests.get("https://feeds.nos.nl/nosnieuwsalgemeen", headers=headers)
-headlines = []
-for line in r.text.split("<item>")[1:4]:
-    title = line.split("<title>")[1].split("</title>")[0]
-    headlines.append(title.replace("<![CDATA[", "").replace("]]>", ""))
+os.makedirs("output", exist_ok=True)
 
-# 3. Script schrijven voor Nieuwsman #3
-datum = datetime.datetime.now().strftime("%A %d %B")
-script = f"Goedemorgen! Dit is het Nieuwsman Journaal van {datum}. "
-script += f"Item 1: {headlines[0]}. "
-script += f"Item 2: {headlines[1]}. "
-script += f"Item 3: {headlines[2]}. "
-script += "Dat was het nieuws. Fijne dag!"
+# 1. Haal NOS nieuws
+try:
+    nos_rss = requests.get("https://feeds.nos.nl/nosnieuwsalgemeen", timeout=10).text
+    titles = re.findall(r'<title><!\[CDATA\[(.*?)\]\]></title>', nos_rss)
+    nieuws = titles[1] if len(titles) > 1 else "Geen nieuws gevonden"
+    nieuws = nieuws.replace("&quot;", '"').replace("&amp;", "&")
+    print(f"Headline: {nieuws}")
+except Exception as e:
+    nieuws = "Welkom bij het Nieuwsman Journaal"
+    print(f"NOS error: {e}")
 
-with open("output/script.txt", "w") as f:
+# 2. Maak nieuwstekst
+vandaag = datetime.now().strftime('%d %B')
+script = f"Goedemorgen. Dit is het Nieuwsman Journaal van {vandaag}. {nieuws}. Dat was het nieuws. Tot morgen."
+with open("script.txt", "w") as f:
     f.write(script)
 
-print("Script klaar:", script)
+# 3. Google TTS - gratis spraak
+try:
+    from gtts import gTTS
+    tts = gTTS(text=script, lang='nl', slow=False)
+    tts.save("output/audio.mp3")
+    print("Audio gegenereerd")
+except:
+    print("gTTS niet beschikbaar, audio stap overslaan")
 
-# 4. Video placeholder - vervangen we straks
-print("Video maken...")
+# 4. Placeholder video - hier komt straks poppetje #3
+# Voor nu maken we vandaag.mp4 aan zodat je link blijft werken
 with open("output/vandaag.mp4", "wb") as f:
-    f.write(b'Placeholder')
+    f.write(b'\x00\x00\x00\x18ftypmp42\x00\x00mp42isom')
 
-print("Klaar! Video staat in output/vandaag.mp4")
+print("Klaar! Check script.txt voor de tekst")
